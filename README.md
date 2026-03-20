@@ -4,6 +4,10 @@ API 6º Semestre Banco de Dados
 Thunderstone
 </h1>
 
+<p align="center">
+  <img src="docs/img/Thunderstone.png" alt="Thunderstone Logo" width="100">
+</p>
+
 <h3 align="center">
   <img src="docs/img/logo-pokemon.png" alt="logo" width="30" style="vertical-align: middle;"> Equipe Pokémon
 </h3>
@@ -27,12 +31,11 @@ Thunderstone
 
 ## 🏅 Desafio <a id="desafio"></a>
 
-O desafio proposto consiste na **identificação do potencial de aplicação de sensores de falta em redes de média e alta tensão**, com foco na melhoria da continuidade e qualidade do fornecimento de energia elétrica.
-
+O desafio consiste em dimensionar o tamanho físico do sistema de distribuição ou subtransmissão de energia em uma região delimitada, identificando o mercado potencial para os produtos de sensoriamento e telemetria da Tecsys. Atualmente, o impacto econômico das perdas de energia tende a ser subdimensionado. Embora a agência reguladora aplique multas financeiras severas para punir as concessionárias, essas sanções não se traduzem necessariamente no ressarcimento ou na melhoria do serviço para a população que sofre com a falta de luz.
 
 ## 🏅 Solução <a id="solucao"></a>
 
-O objetivo é **dimensionar o tamanho físico e econômico do sistema de distribuição ou subtransmissão de energia**, em uma região específica definida, a fim de avaliar a **potencialidade de mercado da solução da Tecsys**, voltada ao sensoriamento e telemetria das redes elétricas.
+O objetivo da solução é padronizar a análise de dados de qualquer distribuidora de energia através da importação (upload) de bases regulatórias complexas, transformando-as em painéis visuais e cálculos estruturados. A plataforma atua como um motor de inteligência comercial para a Tecsys, fornecendo argumentos técnicos irrefutáveis orientados a dados (data-driven) para provar às concessionárias que a instalação de sensores inteligentes é o investimento definitivo para mitigar multas regulatórias, melhorar a continuidade da rede e impulsionar as vendas da empresa.
 
 ---
 
@@ -44,7 +47,7 @@ O objetivo é **dimensionar o tamanho físico e econômico do sistema de distrib
 | 2 |  Alta | Como um membro do time comercial/técnico, eu quero visualizar um gráfico de barras ordenado pelos conjuntos elétricos com maior índice SAM, para que eu saiba rapidamente quais regiões têm prioridade máxima de implantação de sensores. | 10 | 1 |  [`RF1-DATA-INGEST`](process/requisitos.md#rf1-data-ingest---ingestão-de-dados-regulatórios)<br>[`RF2-ANALYTICS-CRIT`](process/requisitos.md#rf2-analytics-crit---cálculo-de-criticidade-e-perdas) |  |
 | 3 |  Alta | Como um membro do time comercial/técnico, eu quero visualizar um gráfico de barras empilhadas que compare o volume absoluto (em MWh) das Perdas Técnicas (PT) e Não Técnicas (PNT) de cada conjunto elétrico, para evidenciar a magnitude das falhas estruturais da rede. | 10 |1  |  [`RF1-DATA-INGEST`](process/requisitos.md#rf1-data-ingest---ingestão-de-dados-regulatórios)<br>[`RF2-ANALYTICS-CRIT`](process/requisitos.md#rf2-analytics-crit---cálculo-de-criticidade-e-perdas) | |
 | 4 |  Alta | Como um consultor comercial/técnico da Tecsys, eu quero visualizar um ranking com os 10 conjuntos elétricos com maior extensão de média tensão (TAM), para demonstrar os pontos de maior vulnerabilidade operacional. | 12 | 1 | [`RF1-DATA-INGEST`](process/requisitos.md#rf1-data-ingest---ingestão-de-dados-regulatórios)<br>[`RF2-ANALYTICS-TAM`](process/requisitos.md#rf2-analytics-tam---dimensionamento-físico-tam) |  |
-| 5 |  Média | Como um consultor comercial/técnico da Tecsys, eu quero visualizar um mapa de calor georreferenciado indicando os circuitos mais críticos com base no Índice de Criticidade, para justificar investimentos em sensores inteligentes. | 8 | 2 | [`RF4-MAPS-HEATMAP`](process/requisitos.md#rf4-maps-heatmap---mapas-de-calor-e-polígonos) | |
+| 5 |  Média | Como um consultor comercial/técnico da Tecsys, eu quero visualizar um mapa de calor georreferenciado indicando os circuitos mais críticos com base no Índice de Criticidade, para justificar investimentos em sensores inteligentes. | 8 | 1 | [`RF4-MAPS-HEATMAP`](process/requisitos.md#rf4-maps-heatmap---mapas-de-calor-e-polígonos) | |
 | 6 |  Média | Como um usuário do sistema, eu quero dar consentimento sobre o uso dos meus dados, garantir anonimização e ser notificado em caso de incidentes, para assegurar conformidade com a LGPD. |  | 2 | [`RNF3-SEC-LGPD`](process/requisitos.md#rnf3-sec-lgpd---privacidade-e-anonimização) |  |
 | 7 |  Média | Como gestor de segurança, eu quero que o sistema registre logs detalhados de acesso e manipulação de dados, para garantir auditoria e responsabilização. |  | 2 | [`RNF3-SEC-AUDIT`](process/requisitos.md#rnf3-sec-audit---rastreabilidade-logs) |  |
 | 8 |  Baixa | Como um usuário do sistema, eu quero criar conta, fazer login e gerenciar meus dados básicos, para acessar a plataforma com autonomia. |  | 3 | [`RF5-AUTH-CRUD`](process/requisitos.md#rf5-auth-crud---criação-de-conta-e-login) |  |
@@ -57,10 +60,10 @@ O objetivo é **dimensionar o tamanho físico e econômico do sistema de distrib
 Uma User Story será considerada **pronta para desenvolvimento** quando atender aos seguintes critérios:
 
 - A história possui a narrativa estruturada no formato padrão ("Como um... Eu quero... Para que...")
-- O tamanho da tarefa é viável, podendo ser codificada, testada e entregue dentro de um ciclo único de Sprint.
 - Os cenários de uso (Caminho Feliz) estão descritos passo a passo.
-- Os requisitos não funcionais específicos daquela entrega, como regras de LGPD, geração de logs de auditoria ou tempo de resposta, estão explícitos nos critérios.
-- Caso a história impacte na interface visua, o protótipo, wireframe ou esboço da tela está anexado. 
+- Regras de negócio e restrições
+- Caso a história impacte na interface visual, o protótipo, wireframe ou esboço da tela está anexado. 
+- Critérios de aceite em formato BDD (Dado / Quando / Então)
 
 
 ## 🏆 DoD - Definition of Done <a id="dod"></a>
@@ -77,9 +80,9 @@ Uma User Story será considerada **pronta para desenvolvimento** quando atender 
 
 | Sprint          |    Período    | Documentação                                     |
 | --------------- | :-----------: | ------------------------------------------------ |
-| 🔖 **SPRINT 1** | 16/03 - 05/04 |🚧|
+| 🔖 **SPRINT 1** | 16/03 - 05/04 | [doc](process/sprints-backlog/sprint-1.md) |
 | 🔖 **SPRINT 2** | 13/04 - 03/05 |🚧|
-| 🔖 **SPRINT 3** | 11/05 - 31/05 |🚧 |
+| 🔖 **SPRINT 3** | 11/05 - 31/05 |🚧|
 
 ## 💻 Tecnologias <a id="tecnologias"></a>
 
