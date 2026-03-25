@@ -8,7 +8,9 @@ from testcontainers.postgres import PostgresContainer
 
 from backend.app import app
 from backend.database import get_session
+from backend.security import get_password_hash
 from core.models import User, table_registry
+
 
 class UserFactory(factory.Factory):
     class Meta:
@@ -58,20 +60,17 @@ async def client(session):
         yield session
 
     app.dependency_overrides[get_session] = get_session_override
-    
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url='http://test'
+        transport=ASGITransport(app=app), base_url='http://test'
     ) as ac:
         yield ac
-    
     app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture()
 async def user(session):
     pwd = 'testeste'
-    user_obj = UserFactory(password=pwd)
+    user_obj = UserFactory(password=get_password_hash(pwd))
 
     session.add(user_obj)
     await session.commit()
@@ -84,11 +83,18 @@ async def user(session):
 @pytest_asyncio.fixture()
 async def other_user(session):
     pwd = 'testeste'
-    user_obj = UserFactory(password=pwd)
-    
+    user_obj = UserFactory(password=get_password_hash(pwd))
     session.add(user_obj)
     await session.commit()
     await session.refresh(user_obj)
-    
     user_obj.clean_password = pwd
     return user_obj
+
+
+@pytest_asyncio.fixture()
+async def token(client, user):
+    response = await client.post(
+        '/auth/token',
+        data={'username': user.email, 'password': user.clean_password},
+    )
+    return response.json()['access_token']

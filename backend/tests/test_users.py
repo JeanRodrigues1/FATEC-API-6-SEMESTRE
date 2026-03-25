@@ -1,8 +1,8 @@
 from http import HTTPStatus
-import pytest
+
 from core.schemas import UserPublic
 
-@pytest.mark.asyncio
+
 async def test_create_user(client):
     response = await client.post(
         '/users/',
@@ -20,19 +20,18 @@ async def test_create_user(client):
     assert 'id' in data
 
 
-@pytest.mark.asyncio
 async def test_read_users(client, user):
+    user_schema = UserPublic.model_validate(user).model_dump()
     response = await client.get('/users/')
 
     assert response.status_code == HTTPStatus.OK
-    users = response.json()['users']
-    assert any(u['id'] == user.id for u in users)
+    assert user_schema in response.json()['users']
 
 
-@pytest.mark.asyncio
-async def test_update_user(client, user):
+async def test_update_user(client, user, token):
     response = await client.put(
         f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'testeusername2',
             'email': 'test@test.com',
@@ -47,31 +46,33 @@ async def test_update_user(client, user):
     assert data['id'] == user.id
 
 
-@pytest.mark.asyncio
-async def test_delete_user(client, user):
-    response = await client.delete(f'/users/{user.id}')
-    
+async def test_delete_user(client, user, token):
+    response = await client.delete(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'User deleted'}
 
 
-@pytest.mark.asyncio
-async def test_delete_non_existent_user(client):
-    response = await client.delete('/users/999')
-    
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
+async def test_delete_wrong_user(client, other_user, token):
+    response = await client.delete(
+        f'/users/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Not enough permission'}
 
 
-@pytest.mark.asyncio
-async def test_update_other_user(client, other_user):
+async def test_update_user_with_wrong_user(client, other_user, token):
     response = await client.put(
         f'/users/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
             'email': 'bob@example.com',
             'password': 'mynewpassword',
         },
     )
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['username'] == 'bob'
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Not enough permission'}
