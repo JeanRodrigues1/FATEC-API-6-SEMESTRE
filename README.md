@@ -69,8 +69,8 @@ Uma User Story será considerada **pronta para desenvolvimento** quando atender 
 
 ## 🏆 DoD - Definition of Done <a id="dod"></a>
 
-* Manual de Usuário
-* Manual da Aplicação
+* [Manual de Usuário](docs/guides/user-guide.md)
+* [Manual da Aplicação](docs/guides/application-manual.md)
 * Documentação da API (Application Programming Interface)
 * Código completo
 * Vídeos de cada etapa de entrega
