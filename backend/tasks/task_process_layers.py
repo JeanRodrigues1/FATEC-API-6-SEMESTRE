@@ -202,20 +202,23 @@ def _persist_ssdmt(results: list[dict], job_id: str, processed_at: str) -> dict:
 
 def _persist_unsemt(records: list[dict], job_id: str, descartados: int, processed_at: str) -> int:
     col = _get_collection('unsemt')
-    col.create_index('job_id', unique=True, background=True)
-    col.replace_one(
-        {'job_id': job_id},
-        {
+    col.create_index([('job_id', 1)], background=True)
+    col.create_index([('job_id', 1), ('cod_id', 1)], unique=True, background=True)
+    col.create_index([('job_id', 1), ('conj', 1)], background=True)
+
+    docs = []
+    for r in records:
+        doc = {
+            **r,
             'job_id': job_id,
             'processed_at': processed_at,
-            'total': len(records),
-            'descartados': descartados,
-            'records': records,
-        },
-        upsert=True,
-    )
-    return len(records)
+        }
+        docs.append(doc)
 
+    if docs:
+        col.insert_many(docs, ordered=False)
+
+    return len(records)
 
 REQUIRED_CTMT_COLUMNS: set[str] = {
     'COD_ID',

@@ -118,8 +118,10 @@ def _feature_ssdmt(cod_id, ctmt, geometry=None, conj='CJ', comp=10, dist='404'):
         'geometry': geometry,
     }
 
-def _feature_unsemt(cod_id, conj='CJ', tip_unid='32', sit_ativ='AT', geometry=None):
-    if geometry is None:
+_NO_GEOMETRY = object()
+
+def _feature_unsemt(cod_id, conj='CJ', tip_unid='32', sit_ativ='AT', geometry=_NO_GEOMETRY):
+    if geometry is _NO_GEOMETRY:
         geometry = {'type': 'Point', 'coordinates': [-54.59809, -22.79093]}
     return {
         'properties': {
@@ -605,19 +607,20 @@ def test_unsemt_lanca_erro_sem_registros_validos():
             task_processar_unsemt.run('job-unsemt-6', '/tmp/arquivo.gdb')
 
 
-def test_unsemt_coordinates_none_quando_sem_geometry():
+def test_unsemt_descarta_quando_sem_geometry():
     dataset = _FakeDataset(
         columns=set(REQUIRED_UNSEMT_COLUMNS),
         rows=[
-            _feature_unsemt('UN-01', geometry=None),
+            _feature_unsemt('UN-01', tip_unid='32', sit_ativ='AT', geometry=None),  
+            _feature_unsemt('UN-02', tip_unid='32', sit_ativ='AT'),                  
         ],
     )
-    dataset._rows[0]['geometry'] = None
-
     with patch(f'{TASK_MODULE}.fiona.open', return_value=dataset):
         result = task_processar_unsemt.run('job-unsemt-7', '/tmp/arquivo.gdb')
 
-    assert result['records'][0]['coordinates'] is None
+    assert result['descartados'] >= 1
+    assert all(r['cod_id'] != 'UN-01' for r in result['records'])
+    
 class _FakeMongoCollection:
     def __init__(self):
         self.docs = []
