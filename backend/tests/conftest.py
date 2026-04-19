@@ -129,9 +129,11 @@ def setup_test_data(mongo_db):
         test_job_id = "test-job-123"
         colecao.insert_one({
             "job_id": test_job_id,
-            "cod_id": "123",
-            "dist": "Teste",
-            "perdas_m_total": 0.5
+            "CTMT": "CTMT_TESTE",
+            "CONJ": "999",
+            "DIST": "DIST_TESTE",
+            "extensao_m": 1000.0,
+            "perdas_m_total": 0.1
         })
         return test_job_id
         
