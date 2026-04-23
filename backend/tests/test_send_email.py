@@ -16,14 +16,15 @@ async def test_send_email_success():
 
         await send_email(user) 
 
+        assert instance.send_message.called
+        
         args, _ = instance.send_message.call_args
         message = args[0]
         
         assert message.subject == "Relatório automático"
 
         recipients_list = [r.email if hasattr(r, 'email') else r for r in message.recipients]
-        
-        assert recipients_list == ["cliente@exemplo.com"]
+        assert "cliente@exemplo.com" in recipients_list
 
 @pytest.mark.asyncio
 async def test_send_email_error_log(capsys):

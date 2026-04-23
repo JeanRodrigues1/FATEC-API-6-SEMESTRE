@@ -1,5 +1,5 @@
 import uuid
-
+import os
 import factory
 import pytest
 import pytest_asyncio
@@ -10,7 +10,6 @@ from testcontainers.postgres import PostgresContainer
 
 from backend.app import app
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
 from backend.database import get_session
 from backend.core import models as _models  # noqa: F401
 from backend.security import get_password_hash
@@ -141,3 +140,16 @@ async def api_response(client, setup_test_data):
 
     response = await client.get(f'/tam/{setup_test_data}')
     return response
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart():
+    """
+    Executa antes da coleta dos testes. 
+    Define variáveis de ambiente mínimas para evitar erros de validação do Pydantic.
+    """
+    os.environ["MAIL_USERNAME"] = "test_user"
+    os.environ["MAIL_PASSWORD"] = "test_password"
+    os.environ["MAIL_SERVER"] = "smtp.test.com"
+    os.environ["MAIL_PORT"] = "587"
+    os.environ["MAIL_FROM"] = "admin@test.com"  
