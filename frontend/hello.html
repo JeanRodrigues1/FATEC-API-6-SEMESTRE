@@ -1,33 +1,76 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petite-Vue: Olá Mundo</title>
-
-    <script src="https://unpkg.com/petite-vue" defer init></script>
-
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; }
-        .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; shadow: 2px 2px 10px rgba(0,0,0,0.1); }
-        input { margin-top: 10px; padding: 5px; }
-    </style>
-</head>
+<html lang="pt-BR">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu App</title>
+  <link rel="stylesheet" href="./style.css?v=1" />
+  <script src="https://unpkg.com/petite-vue@0.2.2/dist/petite-vue.iife.js" defer init></script>
 <body>
+  <div v-scope="app" class="app">
+    <aside class="sidebar">
+      <nav class="nav">
+        <button :class="{ 'nav-item' : true,'nav-item--active': screen === 'perfil' }" @click="go('perfil')">PERFIL</button>
+        <button :class="{ 'nav-item' : true,'nav-item--active': screen === 'documents' }" @click="go('documents')">DOCUMENTOS</button>
+        <button :class="{ 'nav-item' : true }" @click="go('login')">SAIR</button>
+      </nav>
+    </aside>
 
-    <div v-scope="{ nome: 'Mundo', cor: 'blue' }" class="card">
-        
-        <h1 :style="{ color: cor }">Olá, {{ nome }}!</h1>
+    <main class="main">
+      <section class="card" v-if="screen === 'documents'">
+        <h1 class="card-title">
+          <span class="background-icon">
+            <img src="./assets/Icon.svg" alt="" class="nav-icon">
+          </span> Documentação</h1>
+        <h1 class="card-subtitle">Configuração de exportação de dados</h1>
+        <label class="field">
+          <span class="field-label">SELECIONE DISTRIBUIDORA</span>
+          <select v-model="filters.tipo">
+            <option value="">Selecione</option>
+            <option value="a">Tipo A</option>
+            <option value="b">Tipo B</option>
+          </select>
+        </label>
 
-        <p>Digite seu nome abaixo:</p>
-        <input v-model="nome" placeholder="Seu nome aqui...">
+        <label class="field">
+          <span class="field-label">SELECIONE ANO</span>
+          <select v-model="filters.status">
+            <option value="">Selecione</option>
+            <option value="ano">2025</option>
+            <option value="ano">2024</option>
+            <option value="ano">2023</option>
+            <option value="ano">2022</option>
+            <option value="ano">2021</option>
+          </select>
+        </label>
 
-        <div style="margin-top: 15px;">
-            <button @click="cor = 'red'">Ficar Vermelho</button>
-            <button @click="cor = 'blue'">Ficar Azul</button>
-        </div>
+        <button class="primary-btn" @click="gerarPDF">
+          <img src="./assets/pdfbutton.svg" alt="" class="nav-icon">
+          GERAR DOCUMENTAÇÃO PDF
+        </button>
+      </section>
+    </main>
+  </div>
 
-    </div>
+  <script type="module">
+    import { createApp } from 'https://unpkg.com/petite-vue?module'
 
+    createApp({
+      screen: 'home',
+      filters: {
+        tipo: '',
+        status: ''
+      }, 
+      gerarPDF(){
+        console.log('Gerar PDF com filtros:', this.filters)
+      },
+      aplicarFiltros() {
+        console.log('Filtros aplicados:', this.filters)
+      },
+      go(to) {
+        this.screen = to
+      },
+    }).mount()
+  </script>
 </body>
 </html>
+
