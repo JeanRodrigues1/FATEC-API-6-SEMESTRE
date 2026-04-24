@@ -3,16 +3,14 @@ from http import HTTPStatus
 from fastapi import FastAPI
 
 from .core.schemas import Message
-from .routes import auth, etl, users, pt_and_pnt
+from .routes import auth, etl, users, pt_and_pnt, tam
 
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(etl.router, prefix='/etl')
 app.include_router(pt_and_pnt.router)
-
-app.include_router(users.router)
-app.include_router(auth.router)
+app.include_router(tam.router)
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)
