@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from datetime import date
+
+from pydantic import BaseModel, ConfigDict, EmailStr, HttpUrl
 
 
 class Message(BaseModel):
@@ -33,3 +35,22 @@ class CriticidadeResponse(BaseModel):
     desvio_dec: float
     desvio_fec: float
     cor: str
+
+class DistribuidoraPayload(BaseModel):
+    id: str | None
+    dist_name: str
+    date_gdb: date | None
+
+
+class SyncDistribuidorasResponse(BaseModel):
+    total_recebidas: int
+    total_persistidas: int
+
+
+class DownloadRequest(BaseModel):
+    url: HttpUrl
+
+
+class DecFecRequest(BaseModel):
+    url_realizado: HttpUrl
+    url_limite: HttpUrl

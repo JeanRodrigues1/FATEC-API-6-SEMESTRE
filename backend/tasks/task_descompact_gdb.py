@@ -40,6 +40,30 @@ REQUIRED_SCHEMA: dict[str, set[str]] = {
         'PERD_A4_B',
         'PERD_B_A3a',
         'PERD_B_A4',
+        'PNTMT_01',
+        'PNTMT_02',
+        'PNTMT_03',
+        'PNTMT_04',
+        'PNTMT_05',
+        'PNTMT_06',
+        'PNTMT_07',
+        'PNTMT_08',
+        'PNTMT_09',
+        'PNTMT_10',
+        'PNTMT_11',
+        'PNTMT_12',
+        'PNTBT_01',
+        'PNTBT_02',
+        'PNTBT_03',
+        'PNTBT_04',
+        'PNTBT_05',
+        'PNTBT_06',
+        'PNTBT_07',
+        'PNTBT_08',
+        'PNTBT_09',
+        'PNTBT_10',
+        'PNTBT_11',
+        'PNTBT_12',
     },
     'SSDMT': {
         'COD_ID',
@@ -49,6 +73,7 @@ REQUIRED_SCHEMA: dict[str, set[str]] = {
         'DIST',
     },
     'CONJ': {'COD_ID', 'NOME', 'DIST'},
+    'UNSEMT': {'COD_ID','CONJ','TIP_UNID','SIT_ATIV'},
 }
 
 
@@ -134,6 +159,7 @@ def task_descompact_gdb(self, job_id: str, zip_path: str) -> dict:
         header_tasks = [
             signature('etl.processar_ctmt', args=(job_id, gdb_path)),
             signature('etl.processar_conj', args=(job_id, gdb_path)),
+            signature('etl.processar_unsemt', args=(job_id, gdb_path)),
         ]
 
         if SSDMT_PARALLEL_CHUNK_SIZE > 0:
