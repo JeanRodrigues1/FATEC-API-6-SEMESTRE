@@ -3,23 +3,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meu App</title>
-  <link rel="stylesheet" href="./style.css?v=2" />
+  <link rel="stylesheet" href="./style.css?v=4" />
   <script src="https://unpkg.com/petite-vue@0.2.2/dist/petite-vue.iife.js" defer init></script>
 <body>
   <div v-scope="app" class="app">
     <aside class="sidebar">
       <nav class="nav">
         <button :class="{ 'nav-item' : true,'nav-item--active': screen === 'perfil' }" @click="go('perfil')">PERFIL</button>
-        <button :class="{ 'nav-item' : true,'nav-item--active': screen === 'documents' }" @click="go('documents')">DOCUMENTOS</button>
+        <button :class="{ 'nav-item' : true,'nav-item--active': screen === 'documents' }" @click="go('documents')">
+          <img class="nav-icon"src="./assets/docsidebaricon.svg">DOCUMENTOS</button>
         <button :class="{ 'nav-item' : true }" @click="go('login')">SAIR</button>
       </nav>
     </aside>
 
     <main class="main">
       <div class="screen-wrapper" v-if="screen === 'documents'">
-      <h1 class="screen-title">Geração de Documentação</h1>
-      <h1 class="screen-subtitle"> Selecione os parâmetros necessários para compilar e gerar os relatórios
-oficiais em formato digital e enviar por e-mail.</h1>
+      <div class="screen-title">Geração de  <span style="color: #DD7230; margin-left: 10px;">Documentação</span></div>
+      <div class="screen-subtitle">
+        <p>Selecione os parâmetros necessários para compilar e gerar os relatórios</p> 
+        <p>oficiais em formato digital e enviar por e-mail.</p>
+        </div>
       <section class="card" >
         <h1 class="card-title">
           <span class="background-icon">
@@ -47,10 +50,20 @@ oficiais em formato digital e enviar por e-mail.</h1>
           </select>
         </label>
 
+        <div class="info-card">
+          <img src="./assets/infoicon.svg" alt="Info" class="info-icon">
+          <div class="info-text">
+            <p style="margin-bottom: 4px;">A geração do documento pode levar alguns segundos</p>
+            <p style="margin-bottom: 4px;">dependendo do volume de dados processados para a </p>
+            <p style="margin-bottom: 4px;">distribuidora selecionada.</p>
+          </div>
+        </div>
+
         <button class="primary-btn" @click="gerarPDF">
           <img src="./assets/pdfbutton.svg" alt="" class="nav-icon">
           GERAR DOCUMENTAÇÃO PDF
         </button>
+        <div class="project-label">Sistema Thunderstone • Acesso Seguro Protegido</div>
       </section>
       </div>
     </main>
