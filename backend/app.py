@@ -3,11 +3,12 @@ from http import HTTPStatus
 from fastapi import FastAPI
 
 from .core.schemas import Message
-from .routes import auth, etl, users
+from .routes import auth, criticidade, etl, users
 
 app = FastAPI()
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(criticidade.router, prefix='/etl')
 app.include_router(etl.router, prefix='/etl')
 
 app.include_router(users.router)

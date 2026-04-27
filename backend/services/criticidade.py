@@ -1,0 +1,237 @@
+import logging
+from typing import Dict, List, Optional
+
+from pymongo import MongoClient
+from pymongo.collection import Collection
+
+from backend.settings import Settings
+
+logger = logging.getLogger(__name__)
+
+
+def get_mongo_collection(collection_name: str) -> Collection:
+    """Obtém uma coleção do MongoDB."""
+    settings = Settings()
+    client = MongoClient(settings.MONGO_URI)
+    return client[settings.MONGO_DB][collection_name]
+
+
+def calcular_desvio(realizado: float, limite: float) -> float:
+    """Calcula o desvio percentual, com mínimo de 0."""
+    if limite == 0:
+        return 0.0
+    desvio = ((realizado - limite) / limite) * 100
+    return max(0.0, desvio)
+
+
+def classificar_criticidade(score: float) -> str:
+    """
+    Classifica a criticidade baseada no score, seguindo a lógica do notebook.
+    
+    Args:
+        score: Score de criticidade calculado
+        
+    Returns:
+        String com a classificação: 'Verde', 'Laranja' ou 'Vermelho'
+    """
+    if score == 0:
+        return 'Verde'
+    elif 0 < score <= 10:
+        return 'Laranja'
+    else:
+        return 'Vermelho'
+
+
+def buscar_dados_realizados(ano: int, distribuidora: str) -> List[Dict]:
+    """Busca dados realizados de DEC/FEC para um ano e distribuidora."""
+    collection = get_mongo_collection('dec_fec_realizado')
+    
+    pipeline = [
+        {
+            '$match': {
+                'ano_indice': ano,
+                'sig_agente': distribuidora.upper(),
+                'sig_indicador': {'$in': ['DEC', 'FEC']}
+            }
+        },
+        {
+            '$group': {
+                '_id': {
+                    'sig_agente': '$sig_agente',
+                    'ide_conj': '$ide_conj',
+                    'dsc_conj': '$dsc_conj',
+                    'sig_indicador': '$sig_indicador'
+                },
+                'valor_realizado': {'$sum': '$vlr_indice'}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'sig_agente': '$_id.sig_agente',
+                'ide_conj': '$_id.ide_conj',
+                'dsc_conj': '$_id.dsc_conj',
+                'sig_indicador': '$_id.sig_indicador',
+                'valor_realizado': 1
+            }
+        }
+    ]
+    
+    resultados = list(collection.aggregate(pipeline))
+    logger.info(f"Encontrados {len(resultados)} registros realizados para {distribuidora} em {ano}")
+    return resultados
+
+
+def buscar_dados_limites(ano: int, distribuidora: str) -> List[Dict]:
+    """Busca dados limites de DEC/FEC para um ano e distribuidora."""
+    collection = get_mongo_collection('dec_fec_limite')
+    
+    pipeline = [
+        {
+            '$match': {
+                'ano_limite': ano,
+                'sig_agente': distribuidora.upper(),
+                'sig_indicador': {'$in': ['DEC', 'FEC']}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'sig_agente': '$sig_agente',
+                'ide_conj': '$ide_conj',
+                'dsc_conj': '$dsc_conj',
+                'sig_indicador': '$sig_indicador',
+                'valor_limite': '$vlr_limite'
+            }
+        }
+    ]
+    
+    resultados = list(collection.aggregate(pipeline))
+    logger.info(f"Encontrados {len(resultados)} registros limites para {distribuidora} em {ano}")
+    return resultados
+
+
+def calcular_score_criticidade(ano: int, distribuidora: str) -> Optional[Dict]:
+    """
+    Calcula o score de criticidade para uma distribuidora e ano específicos.
+    
+    Args:
+        ano: Ano de análise
+        distribuidora: Nome da distribuidora
+        
+    Returns:
+        Dicionário com o score calculado ou None se não houver dados
+    """
+    try:
+        dados_realizados = buscar_dados_realizados(ano, distribuidora)
+        dados_limites = buscar_dados_limites(ano, distribuidora)
+        
+        if not dados_realizados or not dados_limites:
+            logger.warning(f"Dados não encontrados para {distribuidora} em {ano}")
+            return None
+        
+        realizados_dict = {}
+        for item in dados_realizados:
+            key = (item['sig_agente'], item['ide_conj'], item['sig_indicador'])
+            realizados_dict[key] = item['valor_realizado']
+        
+        limites_dict = {}
+        for item in dados_limites:
+            key = (item['sig_agente'], item['ide_conj'], item['sig_indicador'])
+            limites_dict[key] = item['valor_limite']
+        
+        scores_conjuntos = []
+        for key, valor_realizado in realizados_dict.items():
+            sig_agente, ide_conj, sig_indicador = key
+            
+            limite_key = (sig_agente, ide_conj, sig_indicador)
+            if limite_key not in limites_dict:
+                continue
+                
+            valor_limite = limites_dict[limite_key]
+            
+            desvio = calcular_desvio(valor_realizado, valor_limite)
+            
+            scores_conjuntos.append({
+                'sig_agente': sig_agente,
+                'ide_conj': ide_conj,
+                'sig_indicador': sig_indicador,
+                'valor_realizado': valor_realizado,
+                'valor_limite': valor_limite,
+                'desvio': desvio
+            })
+        
+        if not scores_conjuntos:
+            logger.warning(f"Nenhum conjunto com dados completos para {distribuidora} em {ano}")
+            return None
+        
+        conjuntos_scores = {}
+        for item in scores_conjuntos:
+            ide_conj = item['ide_conj']
+            if ide_conj not in conjuntos_scores:
+                conjuntos_scores[ide_conj] = {
+                    'sig_agente': item['sig_agente'],
+                    'ide_conj': ide_conj,
+                    'desvio_dec': 0.0,
+                    'desvio_fec': 0.0,
+                    'score_criticidade': 0.0
+                }
+            
+            if item['sig_indicador'] == 'DEC':
+                conjuntos_scores[ide_conj]['desvio_dec'] = item['desvio']
+            elif item['sig_indicador'] == 'FEC':
+                conjuntos_scores[ide_conj]['desvio_fec'] = item['desvio']
+        
+        for conjunto in conjuntos_scores.values():
+            conjunto['score_criticidade'] = conjunto['desvio_dec'] + conjunto['desvio_fec']
+        
+        scores_finais = [c['score_criticidade'] for c in conjuntos_scores.values()]
+        score_medio = sum(scores_finais) / len(scores_finais)
+        
+        desvio_dec_medio = sum(c['desvio_dec'] for c in conjuntos_scores.values()) / len(conjuntos_scores)
+        desvio_fec_medio = sum(c['desvio_fec'] for c in conjuntos_scores.values()) / len(conjuntos_scores)
+        
+        cor_classificacao = classificar_criticidade(score_medio)
+        
+        resultado = {
+            'ano': ano,
+            'distribuidora': distribuidora.upper(),
+            'score_criticidade': score_medio,
+            'desvio_dec': desvio_dec_medio,
+            'desvio_fec': desvio_fec_medio,
+            'cor': cor_classificacao,
+            'quantidade_conjuntos': len(conjuntos_scores)
+        }
+        
+        # Salvar no MongoDB
+        salvar_score_criticidade(resultado)
+        
+        logger.info(f"Score calculado para {distribuidora} em {ano}: {score_medio:.2f}")
+        return resultado
+        
+    except Exception as e:
+        logger.error(f"Erro ao calcular score de criticidade: {e}")
+        raise
+
+
+def salvar_score_criticidade(dados: Dict) -> None:
+    """Salva o score de criticidade na coleção MongoDB."""
+    try:
+        collection = get_mongo_collection('score_criticidade')
+        
+        filtro = {
+            'ano': dados['ano'],
+            'distribuidora': dados['distribuidora']
+        }
+        
+        collection.update_one(
+            filtro,
+            {'$set': dados},
+            upsert=True
+        )
+        
+        logger.info(f"Score salvo para {dados['distribuidora']} em {dados['ano']}")
+        
+    except Exception as e:
+        logger.error(f"Erro ao salvar score de criticidade: {e}")
+        raise
