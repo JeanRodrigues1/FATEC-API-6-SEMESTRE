@@ -66,3 +66,9 @@ class PipelineTriggerResponse(BaseModel):
     distribuidora_id: str
     ano: int
     download_url: str
+
+
+class DistributorResponse(BaseModel):
+    id: str
+    nome: str
+    ano: int
