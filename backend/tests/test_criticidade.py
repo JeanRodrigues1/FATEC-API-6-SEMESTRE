@@ -255,7 +255,7 @@ def test_endpoint_criticidade_espacos_branco():
 def test_endpoint_criticidade_valores_extremos():
     """Testa endpoint com valores extremos válidos."""
     mock_result = {
-        'ano': 2000,
+        'ano': 2015,
         'distribuidora': 'TEST',
         'score_criticidade': 999.99,
         'desvio_dec': 500.0,
