@@ -145,7 +145,12 @@
       },
 
       go(tela) {
-        this.screen = tela
+        if (tela === 'login') {
+          localStorage.removeItem('access_token')
+          window.location.href = 'login.html'
+        } else if (tela === 'perfil') {
+          window.location.href = 'profile.html'
+        }
       }
     }
     createApp(app).mount()
