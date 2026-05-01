@@ -38,7 +38,7 @@ async def calcular_criticidade_endpoint(
         if ano < _ANO_MIN or ano > _ANO_MAX:
             raise HTTPException(
                 status_code=400,
-                detail='Ano deve estar entre 2000 e 2030',
+                detail=f'Ano deve estar entre {_ANO_MIN} e {_ANO_MAX}',
             )
 
         if not distribuidora or len(distribuidora.strip()) < _DIST_MIN_LEN:
