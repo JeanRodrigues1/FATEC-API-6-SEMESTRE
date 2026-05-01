@@ -116,7 +116,7 @@ async def test_pipeline_trigger_chain_contem_todas_as_tasks(
     assert sigs[1].args == (job_id, 'DIST CHAIN', 2026)
     
     assert sigs[2].task == 'etl.calculate_pt_pnt'
-    assert sigs[2].args == (job_id, 'DIST CHAIN')
+    assert sigs[2].args == (job_id, 'item-chain')
 
     assert sigs[3].task == 'etl.mapa_criticidade'
     assert sigs[3].args == (job_id, 'item-chain', 'DIST CHAIN', 2026)
