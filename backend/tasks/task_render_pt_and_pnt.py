@@ -83,7 +83,7 @@ def _estilizar_eixos(ax):
     bind=True, max_retries=MAX_WAIT_RETRIES, name='etl.render_pt_pnt'
 )
 def task_render_pt_pnt(
-    self, job_id: str, distribuidora_id: str, ano: int
+    self, job_id: str, distribuidora_id: str, sig_agente: str, ano: int
 ) -> dict:
     logger.info('[task_render_pt_pnt] Inicio. job_id=%s', job_id)
 
@@ -136,10 +136,9 @@ def task_render_pt_pnt(
         loc='lower right', fontsize=9, framealpha=0.9, edgecolor='#cccccc'
     )
 
-    dist_name = doc.get('dist_name', distribuidora_id)
     ax.set_title(
         f'Gráfico de Perdas Técnicas e Não Técnicas\n'
-        f'Todos os conjuntos por PNT  |  {ano}',
+        f'Todos os conjuntos da Distribuidora {sig_agente}  |  {ano}',
         fontsize=11,
         color='#222222',
         pad=14,
@@ -148,8 +147,7 @@ def task_render_pt_pnt(
 
     plt.tight_layout()
 
-    sig = dist_name.replace(' ', '_').upper()
-    out_path = _output_dir() / f'pt_pnt_{sig}_{ano}.png'
+    out_path = _output_dir() / f'pt_pnt_{sig_agente}_{ano}.png'
     plt.savefig(out_path, dpi=150, bbox_inches='tight', facecolor='white')
     plt.close(fig)
 

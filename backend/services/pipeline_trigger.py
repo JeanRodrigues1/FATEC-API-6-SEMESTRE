@@ -1,21 +1,23 @@
 import uuid
 from datetime import datetime, timezone
 
-from backend.tasks.task_calculate_pt_pnt import task_calculate_pt_pnt
-from backend.tasks.task_render_pt_and_pnt import task_render_pt_pnt
 import httpx
 from celery import chain
-
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.models import Distribuidora
-from backend.tasks.task_criticidade import task_mapa_criticidade, task_score_criticidade
+from backend.tasks.task_calculate_pt_pnt import task_calculate_pt_pnt
+from backend.tasks.task_criticidade import (
+    task_mapa_criticidade,
+    task_score_criticidade,
+)
 from backend.tasks.task_download_gdb import task_download_gdb
 from backend.tasks.task_render_criticidade import (
     task_render_mapa_calor,
     task_render_tabela_score,
 )
+from backend.tasks.task_render_pt_and_pnt import task_render_pt_pnt
 
 ARCGIS_ITEM_URL = 'https://www.arcgis.com/sharing/rest/content/items/{item_id}'
 ARCGIS_DOWNLOAD_URL = (
@@ -140,8 +142,8 @@ async def trigger_pipeline_flow(
     result = chain(
         task_download_gdb.si(job_id, download_url, distribuidora_id),
         task_score_criticidade.si(job_id, dist_name, ano),
-        task_calculate_pt_pnt.si(job_id, distribuidora_id),
-        task_render_pt_pnt.si(job_id, distribuidora_id,ano),
+        task_calculate_pt_pnt.si(job_id, distribuidora_id, dist_name, ano),
+        task_render_pt_pnt.si(job_id, distribuidora_id, dist_name, ano),
         task_mapa_criticidade.si(job_id, distribuidora_id, dist_name, ano),
         task_render_tabela_score.si(job_id, dist_name, ano),
         task_render_mapa_calor.si(job_id, dist_name, ano),

@@ -9,6 +9,7 @@ TASK_MODULE = 'backend.tasks.task_render_pt_and_pnt'
 
 JOB_ID = 'job-render-123'
 DIST_ID = 'dist-456'
+SIG_AGENTE = 'ENERGISA_MS'
 ANO = 2023
 
 RECORDS = [
@@ -42,7 +43,6 @@ def mock_mongo_com_doc():
     mock_db['pt_pnt_resultados'].find_one.return_value = {
         'job_id': JOB_ID,
         'distribuidora_id': DIST_ID,
-        'dist_name': 'ENERGISA',
         'records': RECORDS,
     }
     with patch(f'{TASK_MODULE}.get_mongo_sync_db', return_value=mock_db):
@@ -63,7 +63,6 @@ def mock_mongo_sem_records():
     mock_db['pt_pnt_resultados'].find_one.return_value = {
         'job_id': JOB_ID,
         'distribuidora_id': DIST_ID,
-        'dist_name': 'ENERGISA',
         'records': [],
     }
     with patch(f'{TASK_MODULE}.get_mongo_sync_db', return_value=mock_db):
@@ -72,11 +71,11 @@ def mock_mongo_sem_records():
 
 def test_dispara_retry_quando_doc_nao_encontrado(mock_mongo_sem_doc):
     with pytest.raises(Exception, match='retry triggered'):
-        task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+        task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
 
 def test_retorna_skipped_quando_records_vazio(mock_mongo_sem_records):
-    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
     assert result['status'] == 'skipped'
     assert result['reason'] == 'no_records'
@@ -84,43 +83,27 @@ def test_retorna_skipped_quando_records_vazio(mock_mongo_sem_records):
 
 
 def test_retorna_done_quando_sucesso(mock_mongo_com_doc, mock_output_dir):
-    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
     assert result['status'] == 'done'
     assert result['job_id'] == JOB_ID
 
 
 def test_salva_arquivo_png(mock_mongo_com_doc, mock_output_dir):
-    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
-    path = result['path']
-    assert path.endswith('.png')
+    assert result['path'].endswith('.png')
 
 
-def test_nome_arquivo_usa_dist_name(mock_mongo_com_doc, mock_output_dir):
-    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+def test_nome_arquivo_usa_sig_agente_e_ano(mock_mongo_com_doc, mock_output_dir):
+    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
-    assert 'ENERGISA' in result['path']
+    assert SIG_AGENTE in result['path']
     assert str(ANO) in result['path']
 
 
-def test_nome_arquivo_fallback_para_dist_id_sem_dist_name(
-    mock_output_dir,
-):
-    mock_db = MagicMock()
-    mock_db['pt_pnt_resultados'].find_one.return_value = {
-        'job_id': JOB_ID,
-        'distribuidora_id': DIST_ID,
-        'records': RECORDS,
-    }
-    with patch(f'{TASK_MODULE}.get_mongo_sync_db', return_value=mock_db):
-        result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
-
-    assert DIST_ID.upper() in result['path']
-
-
 def test_arquivo_png_criado_em_disco(mock_mongo_com_doc, mock_output_dir):
-    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+    result = task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
     assert Path(result['path']).exists()
 
@@ -128,7 +111,7 @@ def test_arquivo_png_criado_em_disco(mock_mongo_com_doc, mock_output_dir):
 def test_busca_doc_com_job_id_e_distribuidora_id(
     mock_mongo_com_doc, mock_output_dir
 ):
-    task_render_pt_pnt.run(JOB_ID, DIST_ID, ANO)
+    task_render_pt_pnt.run(JOB_ID, DIST_ID, SIG_AGENTE, ANO)
 
     mock_mongo_com_doc['pt_pnt_resultados'].find_one.assert_called_once_with(
         {'job_id': JOB_ID, 'distribuidora_id': DIST_ID},
