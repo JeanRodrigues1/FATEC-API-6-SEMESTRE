@@ -31,6 +31,43 @@ class UserFactory(factory.Factory):
     password = factory.LazyAttribute(lambda obj: f'{obj.username}+senha')
 
 
+@pytest.fixture(scope="session", autouse=True)
+def setup_celery_test_config():
+    """Configura o Celery para modo síncrono durante os testes."""
+    celery_app.conf.update(
+        task_always_eager=True,     
+        task_eager_propagates=True, 
+    )
+
+@pytest_asyncio.fixture
+async def triggered_job(session, setup_distribuidora):
+    """Aciona o trigger_pipeline_flow isolando a rede e retorna o job_id gerado."""
+    
+    dist_data = setup_distribuidora
+    
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id": dist_data["id"],
+        "name": dist_data["dist_name"],
+        "type": "File Geodatabase",
+        "url": "https://link-da-aneel.com/dados.gdb.zip"
+    }
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_response
+        
+        result = await trigger_pipeline_flow(
+            session=session,
+            distribuidora_id=dist_data["id"],
+            ano=dist_data["date_gdb"]
+        )
+    
+    return {
+        "job_id": result["job_id"],
+        "dist_data": dist_data
+    }
+
 @pytest.fixture(scope='session')
 def postgres_container():
     with PostgresContainer('postgres:16', driver='psycopg') as postgres:
