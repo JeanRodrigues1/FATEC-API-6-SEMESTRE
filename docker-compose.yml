@@ -18,7 +18,7 @@ services:
       - gdb_data:/data
       - ./output:/app/output
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./setup_data:/app/setup_flag
+      - setup_data:/app/setup_flag
     cpus: '2.0'
     mem_limit: 4G
 
@@ -104,3 +104,4 @@ volumes:
   mongo_data:
   postgres_data:
   gdb_data:
+  setup_data:
