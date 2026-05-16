@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import datetime, UTC, timedelta
 from http import HTTPStatus
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.models import ConsentPolicy, User
 from ..core.schemas import Message, ResendVerificationSchema, UserCreateSchema, UserList, UserPublic, UserSchema
 
+logger = logging.getLogger(__name__)
 settings = Settings()
 
 router = APIRouter(prefix='/users', tags=['users'])
@@ -70,7 +72,10 @@ async def create_user(user: UserCreateSchema, session: T_Session):
     await session.commit()
     await session.refresh(db_user)
 
-    await send_confirmation_email(db_user.email, email_token, settings.frontend_url)
+    try:
+        await send_confirmation_email(db_user.email, email_token, settings.frontend_url)
+    except Exception:
+        logger.exception('[create_user] Falha ao enviar email de confirmação para %s', db_user.email)
 
     return db_user
 
@@ -101,7 +106,10 @@ async def resend_verification(body: ResendVerificationSchema, session: T_Session
         user.email_token = secrets.token_urlsafe(32)
         user.email_token_expires_at = datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=24)
         await session.commit()
-        await send_confirmation_email(user.email, user.email_token, settings.frontend_url)
+        try:
+            await send_confirmation_email(user.email, user.email_token, settings.frontend_url)
+        except Exception:
+            logger.exception('[resend_verification] Falha ao enviar email para %s', user.email)
 
     return {'message': 'Email de confirmação reenviado'}
 

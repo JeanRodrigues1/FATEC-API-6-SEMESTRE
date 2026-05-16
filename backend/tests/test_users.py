@@ -139,6 +139,22 @@ async def test_registration_sends_confirmation_email(client, consent_policy):
     assert call_args.args[0] == 'newuser@test.com'
 
 
+async def test_registration_succeeds_even_if_smtp_fails(client, consent_policy):
+    with patch('backend.routes.users.send_confirmation_email', new_callable=AsyncMock) as mock_send:
+        mock_send.side_effect = Exception('SMTP unavailable')
+        response = await client.post(
+            '/users/',
+            json={
+                'username': 'smtpfailuser',
+                'email': 'smtpfail@test.com',
+                'password': 'password',
+                'consented': True,
+            },
+        )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+
 async def test_registered_user_is_unverified(client, session, consent_policy):
     with patch('backend.routes.users.send_confirmation_email', new_callable=AsyncMock):
         response = await client.post(
